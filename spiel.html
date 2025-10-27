@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click Rush 2.0</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: radial-gradient(circle at top left, #ff6a00, #ee0979);
+      color: white;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 2.3rem;
+      margin-bottom: 1em;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #circle {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background-color: red;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.15s;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+
+    #circle:active {
+      transform: scale(0.9);
+    }
+
+    #message {
+      margin-top: 1em;
+      font-size: 1.2rem;
+      min-height: 1.5em;
+    }
+
+    #score {
+      margin-top: 0.3em;
+      font-weight: bold;
+    }
+
+    #highscore {
+      margin-top: 1em;
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+
+    button {
+      margin-top: 1.5em;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      background-color: white;
+      color: #ee0979;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #f0f0f0;
+      transform: scale(1.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>⚡ Click Rush 2.0</h1>
+  <div id="circle"></div>
+  <div id="message">Klicke, wenn der Kreis grün wird!</div>
+  <div id="score"></div>
+  <div id="highscore"></div>
+  <button onclick="startGame()">Neues Spiel 🔁</button>
+
+  <audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+  <audio id="success" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+  <audio id="fail" src="https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg"></audio>
+
+  <script>
+    const circle = document.getElementById("circle");
+    const message = document.getElementById("message");
+    const score = document.getElementById("score");
+    const highscoreDisplay = document.getElementById("highscore");
+
+    const beepSound = document.getElementById("beep");
+    const successSound = document.getElementById("success");
+    const failSound = document.getElementById("fail");
+
+    let startTime, timeoutId, clickable = false;
+    let highscore = localStorage.getItem("clickrush_highscore") || null;
+
+    if (highscore) {
+      highscoreDisplay.textContent = `🏆 Bester Versuch: ${highscore} ms`;
+    }
+
+    function startGame() {
+      message.textContent = "Warte, bis der Kreis grün wird...";
+      circle.style.backgroundColor = "red";
+      score.textContent = "";
+      clickable = false;
+
+      const delay = Math.random() * 3000 + 2000; // 2–5 Sekunden
+      clearTimeout(timeoutId);
+
+      timeoutId = setTimeout(() => {
+        circle.style.backgroundColor = "limegreen";
+        startTime = new Date().getTime();
+        clickable = true;
+        message.textContent = "JETZT!";
+        beepSound.play();
+      }, delay);
+    }
+
+    circle.addEventListener("click", () => {
+      if (!clickable && circle.style.backgroundColor === "red") {
+        message.textContent = "Zu früh! 😅";
+        failSound.play();
+        clearTimeout(timeoutId);
+      } else if (clickable) {
+        const reaction = new Date().getTime() - startTime;
+        message.textContent = `⚡ ${reaction} ms`;
+        successSound.play();
+        clickable = false;
+        circle.style.backgroundColor = "#00bfff";
+
+        if (!highscore || reaction < highscore) {
+          highscore = reaction;
+          localStorage.setItem("clickrush_highscore", reaction);
+          highscoreDisplay.textContent = `🏆 Neuer Highscore: ${reaction} ms 🎉`;
+        } else {
+          highscoreDisplay.textContent = `🏆 Bester Versuch: ${highscore} ms`;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
